@@ -2,7 +2,7 @@
 
 **ElysiumEnderChests** is a lightweight Minecraft plugin for version 1.16.5 that adds portable Ender Chests to your server.
 
-![Version](https://img.shields.io/badge/version-1.1-blue)
+![Version](https://img.shields.io/badge/version-1.2-blue)
 ![Minecraft](https://img.shields.io/badge/Minecraft-1.16.5-green)
 ![API](https://img.shields.io/badge/API-Paper-yellow)
 

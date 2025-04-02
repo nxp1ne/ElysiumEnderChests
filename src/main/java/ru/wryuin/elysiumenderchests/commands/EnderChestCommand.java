@@ -10,6 +10,7 @@ import ru.wryuin.elysiumenderchests.ElysiumEnderChests;
 import ru.wryuin.elysiumenderchests.config.Config;
 import ru.wryuin.elysiumenderchests.item.EnderChestItem;
 import ru.wryuin.elysiumenderchests.utils.ColorUtils;
+import ru.wryuin.elysiumenderchests.utils.VersionUtil;
 
 public class EnderChestCommand implements CommandExecutor {
     private final ElysiumEnderChests plugin;
@@ -33,7 +34,7 @@ public class EnderChestCommand implements CommandExecutor {
             
             Player player = (Player) sender;
             if (!player.hasPermission("elysiumec.enderchest.see.own")) {
-                player.sendMessage(ColorUtils.colorize(config.getNoPermissionMessage()));
+                player.sendMessage(config.getNoPermissionMessage());
                 return true;
             }
             
@@ -44,22 +45,14 @@ public class EnderChestCommand implements CommandExecutor {
             player.sendMessage(config.getOpenChestMessage());
             
             // Воспроизводим звук, если включено
-            if (config.isSoundEnabled()) {
-                player.playSound(player.getLocation(), 
-                    config.getOpenSound(), 
-                    config.getSoundVolume(), 
-                    config.getSoundPitch());
-            }
+            tryPlaySound(player);
             
             // Показываем заголовок, если включено
-            if (config.shouldShowTitle()) {
-                player.sendTitle(
-                    config.getTitleText(),
-                    config.getTitleSubtitle(player.getName()),
-                    config.getTitleFadeIn(),
-                    config.getTitleStay(),
-                    config.getTitleFadeOut()
-                );
+            tryShowTitle(player, player.getName());
+            
+            // Увеличиваем счетчик метрик
+            if (plugin.getMetricsHandler() != null) {
+                plugin.getMetricsHandler().incrementOpenCount();
             }
             
             return true;
@@ -92,22 +85,14 @@ public class EnderChestCommand implements CommandExecutor {
             player.sendMessage(config.getOpenOtherChestMessage(target.getName()));
             
             // Воспроизводим звук, если включено
-            if (config.isSoundEnabled()) {
-                player.playSound(player.getLocation(), 
-                    config.getOpenSound(), 
-                    config.getSoundVolume(), 
-                    config.getSoundPitch());
-            }
+            tryPlaySound(player);
             
             // Показываем заголовок для чужого сундука, если включено
-            if (config.shouldShowTitle()) {
-                player.sendTitle(
-                    config.getOtherPlayerTitleText(),
-                    config.getOtherPlayerSubtitle(target.getName()),
-                    config.getTitleFadeIn(),
-                    config.getTitleStay(),
-                    config.getTitleFadeOut()
-                );
+            tryShowOtherTitle(player, target.getName());
+            
+            // Увеличиваем счетчик метрик
+            if (plugin.getMetricsHandler() != null) {
+                plugin.getMetricsHandler().incrementOpenCount();
             }
             
             return true;
@@ -166,6 +151,11 @@ public class EnderChestCommand implements CommandExecutor {
             }
             target.sendMessage(config.getReceivedChestMessage());
             
+            // Увеличиваем счетчик метрик
+            if (plugin.getMetricsHandler() != null) {
+                plugin.getMetricsHandler().incrementGivenCount(amount);
+            }
+            
             return true;
         } else if (args.length >= 1 && args[0].equalsIgnoreCase("reload")) {
             // Проверка прав на перезагрузку конфига
@@ -197,5 +187,94 @@ public class EnderChestCommand implements CommandExecutor {
      */
     private boolean isNotCommand(String arg) {
         return !arg.equalsIgnoreCase("give") && !arg.equalsIgnoreCase("reload");
+    }
+    
+    /**
+     * Безопасно воспроизводит звук для игрока
+     * @param player игрок, которому нужно воспроизвести звук
+     */
+    private void tryPlaySound(Player player) {
+        if (config.isSoundEnabled()) {
+            try {
+                player.playSound(player.getLocation(), 
+                    config.getOpenSound(), 
+                    config.getSoundVolume(), 
+                    config.getSoundPitch());
+            } catch (Exception e) {
+                // Безопасное воспроизведение звука
+                plugin.getLogger().warning("Ошибка при воспроизведении звука: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Безопасно показывает заголовок для своего эндер-сундука
+     * @param player игрок, которому нужно показать заголовок
+     * @param playerName имя игрока
+     */
+    private void tryShowTitle(Player player, String playerName) {
+        if (config.shouldShowTitle() && VersionUtil.supportsTitles()) {
+            try {
+                sendTitle(
+                    player,
+                    config.getTitleText(),
+                    config.getTitleSubtitle(playerName),
+                    config.getTitleFadeIn(),
+                    config.getTitleStay(),
+                    config.getTitleFadeOut()
+                );
+            } catch (Exception e) {
+                // В случае ошибки просто логируем
+                plugin.getLogger().warning("Ошибка при показе заголовка: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Безопасно показывает заголовок для чужого эндер-сундука
+     * @param player игрок, которому нужно показать заголовок
+     * @param targetName имя целевого игрока
+     */
+    private void tryShowOtherTitle(Player player, String targetName) {
+        if (config.shouldShowTitle() && VersionUtil.supportsTitles()) {
+            try {
+                sendTitle(
+                    player,
+                    config.getOtherPlayerTitleText(),
+                    config.getOtherPlayerSubtitle(targetName),
+                    config.getTitleFadeIn(),
+                    config.getTitleStay(),
+                    config.getTitleFadeOut()
+                );
+            } catch (Exception e) {
+                // В случае ошибки просто логируем
+                plugin.getLogger().warning("Ошибка при показе заголовка: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Безопасно отправляет заголовок игроку с учетом разных версий API
+     * 
+     * @param player игрок
+     * @param title заголовок
+     * @param subtitle подзаголовок
+     * @param fadeIn время появления
+     * @param stay время отображения
+     * @param fadeOut время исчезновения
+     */
+    private void sendTitle(Player player, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
+        try {
+            // Пытаемся использовать стандартный метод (для 1.13+)
+            player.sendTitle(title, subtitle, fadeIn, stay, fadeOut);
+        } catch (NoSuchMethodError e) {
+            // Для более старых версий, где метод с разными параметрами
+            try {
+                player.sendTitle(title, subtitle);
+            } catch (Exception ex) {
+                // Если и это не работает, просто логируем
+                plugin.getLogger().warning("Не удалось отправить заголовок: " + ex.getMessage());
+            }
+        }
     }
 } 

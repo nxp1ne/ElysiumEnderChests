@@ -13,5 +13,35 @@ item_enderchest:
     enable: true
     time: 5 # Время в секундах
     message: '&#3afb00● &f- Вы недавно использовали эндер-сундук! Пожалуйста подождите &#3afb00{time} &fсекунд для повторного открытие эндер-сундука'
+  sound:
+    enabled: true # Проигрывать ли звук при открытии эндер-сундука
+    open: BLOCK_ENDER_CHEST_OPEN # Звук при открытии
+    volume: 1.0 # Громкость звука
+    pitch: 1.0 # Высота звука
+
+view_settings:
+  show_title_on_open: false # Показывать заголовок при открытии эндер-сундука
+  title:
+    text: '&#b302fb&lЭ&#b902f9&lн&#c002f6&lд&#c602f4&lе&#cc01f1&lр&#d301ef&l-&#d901ed&lс&#df01ea&lу&#e601e8&lн&#f200e3&lд&#f900e0&lу&#ff00de&lк'
+    subtitle: '&#3afb00● &fИнвентарь игрока &e{player}'
+    fade_in: 10 # Время появления заголовка (в тиках, 20 тиков = 1 секунда)
+    stay: 40 # Время отображения заголовка
+    fade_out: 10 # Время исчезновения заголовка
+  other_player_title: # Заголовок при просмотре чужого эндер-сундука
+    text: '&#b302fb&lЭндер-сундук'
+    subtitle: '&#3afb00● &fИгрока &e{target}'
+
 messages:
   noPermission: '&#3afb00● &f- У вас нет прав!'
+  open_chest: '&#3afb00● &f- Вы открыли эндер-сундук.'
+  open_other_chest: '&#3afb00● &f- Вы открыли эндер-сундук игрока &e{target}.'
+  received_chest: '&#3afb00● &f- Вы получили переносной эндер-сундук.'
+  gave_chest: '&#3afb00● &f- Вы выдали переносной эндер-сундук игроку &e{target}.'
+  gave_multiple_chests: '&#3afb00● &f- Вы выдали &e{amount} &fпереносных эндер-сундуков игроку &e{target}.'
+  player_not_found: '&#3afb00● &f- Игрок не найден.'
+  config_reloaded: '&#3afb00● &f- Конфигурация успешно перезагружена.'
+  invalid_amount: '&#3afb00● &f- Неверное количество. Используйте положительное число.'
+  
+performance:
+  cache_items: true # Кешировать ли созданные предметы для оптимизации
+  save_cooldowns_on_shutdown: true # Сохранять ли задержки при выключении сервера

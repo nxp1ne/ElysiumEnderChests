@@ -9,6 +9,7 @@ import ru.wryuin.elysiumenderchests.cooldown.CooldownManager;
 import ru.wryuin.elysiumenderchests.item.EnderChestItem;
 import ru.wryuin.elysiumenderchests.listeners.EnderChestListener;
 import ru.wryuin.elysiumenderchests.metrics.MetricsHandler;
+import ru.wryuin.elysiumenderchests.utils.VersionUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,9 +22,28 @@ public final class ElysiumEnderChests extends JavaPlugin {
     private Config config;
     private EnderChestItem enderChestItem;
     private CooldownManager cooldownManager;
+    private MetricsHandler metricsHandler;
 
     @Override
     public void onEnable() {
+        // Проверка совместимости версии
+        if (!VersionUtil.isSupported()) {
+            getLogger().severe("==================================================");
+            getLogger().severe("ElysiumEnderChests поддерживает только версии 1.13 и выше!");
+            getLogger().severe("Ваша версия: " + VersionUtil.getVersionString());
+            getLogger().severe("Плагин будет отключен.");
+            getLogger().severe("==================================================");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+        
+        // Записываем информацию о версии
+        getLogger().info("Обнаружена версия Minecraft: " + VersionUtil.getVersionString());
+        getLogger().info("HEX цвета " + (VersionUtil.supportsHexColors() ? "поддерживаются" : "не поддерживаются") + 
+                          " в этой версии. " + (!VersionUtil.supportsHexColors() ? "Будут использованы стандартные цвета." : ""));
+        getLogger().info("Заголовки " + (VersionUtil.supportsTitles() ? "поддерживаются" : "не поддерживаются") + 
+                          " в этой версии.");
+        
         // Сохраняем конфигурацию по умолчанию
         saveDefaultConfig();
         
@@ -43,7 +63,7 @@ public final class ElysiumEnderChests extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new EnderChestListener(this, enderChestItem, cooldownManager), this);
         
         // Инициализируем метрики (опционально)
-        new MetricsHandler(this);
+        metricsHandler = new MetricsHandler(this);
         
         getLogger().info("ElysiumEnderChests успешно включен!");
     }
@@ -51,7 +71,7 @@ public final class ElysiumEnderChests extends JavaPlugin {
     @Override
     public void onDisable() {
         // Сохраняем кулдауны, если это включено
-        if (config.shouldSaveCooldowns()) {
+        if (config != null && config.shouldSaveCooldowns()) {
             saveCooldowns();
         }
         
@@ -85,6 +105,14 @@ public final class ElysiumEnderChests extends JavaPlugin {
      */
     public CooldownManager getCooldownManager() {
         return cooldownManager;
+    }
+    
+    /**
+     * Получить менеджер метрик
+     * @return Объект для метрик
+     */
+    public MetricsHandler getMetricsHandler() {
+        return metricsHandler;
     }
     
     /**

@@ -10,6 +10,7 @@ import ru.wryuin.elysiumenderchests.ElysiumEnderChests;
 import ru.wryuin.elysiumenderchests.cooldown.CooldownManager;
 import ru.wryuin.elysiumenderchests.item.EnderChestItem;
 import ru.wryuin.elysiumenderchests.utils.ColorUtils;
+import ru.wryuin.elysiumenderchests.utils.VersionUtil;
 
 public class EnderChestListener implements Listener {
     private final ElysiumEnderChests plugin;
@@ -63,21 +64,33 @@ public class EnderChestListener implements Listener {
         
         // Воспроизводим звук, если включено
         if (plugin.getPluginConfig().isSoundEnabled()) {
-            player.playSound(player.getLocation(), 
-                plugin.getPluginConfig().getOpenSound(), 
-                plugin.getPluginConfig().getSoundVolume(), 
-                plugin.getPluginConfig().getSoundPitch());
+            try {
+                player.playSound(player.getLocation(), 
+                    plugin.getPluginConfig().getOpenSound(), 
+                    plugin.getPluginConfig().getSoundVolume(), 
+                    plugin.getPluginConfig().getSoundPitch());
+            } catch (Exception e) {
+                // Безопасное воспроизведение звука (на случай если звук не существует в этой версии)
+                plugin.getLogger().warning("Ошибка при воспроизведении звука: " + e.getMessage());
+            }
         }
         
-        // Показываем заголовок, если включено
-        if (plugin.getPluginConfig().shouldShowTitle()) {
-            player.sendTitle(
-                plugin.getPluginConfig().getTitleText(),
-                plugin.getPluginConfig().getTitleSubtitle(player.getName()),
-                plugin.getPluginConfig().getTitleFadeIn(),
-                plugin.getPluginConfig().getTitleStay(),
-                plugin.getPluginConfig().getTitleFadeOut()
-            );
+        // Показываем заголовок, если включено и поддерживается в этой версии
+        if (plugin.getPluginConfig().shouldShowTitle() && VersionUtil.supportsTitles()) {
+            try {
+                // Для версий 1.16+
+                sendTitle(
+                    player,
+                    plugin.getPluginConfig().getTitleText(),
+                    plugin.getPluginConfig().getTitleSubtitle(player.getName()),
+                    plugin.getPluginConfig().getTitleFadeIn(),
+                    plugin.getPluginConfig().getTitleStay(),
+                    plugin.getPluginConfig().getTitleFadeOut()
+                );
+            } catch (Exception e) {
+                // В случае ошибки просто логируем
+                plugin.getLogger().warning("Ошибка при показе заголовка: " + e.getMessage());
+            }
         }
 
         // Устанавливаем задержку
@@ -88,6 +101,36 @@ public class EnderChestListener implements Listener {
         // Забираем предмет, если это настроено
         if (plugin.getPluginConfig().shouldRetrieve()) {
             item.setAmount(item.getAmount() - 1);
+        }
+        
+        // Увеличиваем счетчик метрик
+        if (plugin.getMetricsHandler() != null) {
+            plugin.getMetricsHandler().incrementOpenCount();
+        }
+    }
+    
+    /**
+     * Безопасно отправляет заголовок игроку с учетом разных версий API
+     * 
+     * @param player игрок
+     * @param title заголовок
+     * @param subtitle подзаголовок
+     * @param fadeIn время появления
+     * @param stay время отображения
+     * @param fadeOut время исчезновения
+     */
+    private void sendTitle(Player player, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
+        try {
+            // Пытаемся использовать стандартный метод (для 1.13+)
+            player.sendTitle(title, subtitle, fadeIn, stay, fadeOut);
+        } catch (NoSuchMethodError e) {
+            // Для более старых версий, где метод с разными параметрами
+            try {
+                player.sendTitle(title, subtitle);
+            } catch (Exception ex) {
+                // Если и это не работает, просто логируем
+                plugin.getLogger().warning("Не удалось отправить заголовок: " + ex.getMessage());
+            }
         }
     }
 } 
