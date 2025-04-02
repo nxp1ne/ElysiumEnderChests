@@ -3,11 +3,12 @@ package ru.wryuin.elysiumenderchests.cooldown;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.entity.Player;
 
 public class CooldownManager {
-    private final Map<UUID, Long> cooldowns = new HashMap<>();
+    private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
     private final int cooldownTime;
 
     public CooldownManager(int cooldownTimeSeconds) {
@@ -20,6 +21,15 @@ public class CooldownManager {
      */
     public void setCooldown(Player player) {
         cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+    }
+    
+    /**
+     * Устанавливает задержку для UUID
+     * @param uuid UUID игрока
+     * @param timestamp Временная метка начала задержки
+     */
+    public void setCooldown(UUID uuid, long timestamp) {
+        cooldowns.put(uuid, timestamp);
     }
 
     /**
@@ -37,7 +47,13 @@ public class CooldownManager {
         long currentTime = System.currentTimeMillis();
         long cooldownInMillis = cooldownTime * 1000L;
         
-        return (currentTime - lastUsed) < cooldownInMillis;
+        // Если время действия задержки истекло, удаляем запись
+        if ((currentTime - lastUsed) >= cooldownInMillis) {
+            cooldowns.remove(uuid);
+            return false;
+        }
+        
+        return true;
     }
 
     /**
@@ -72,5 +88,42 @@ public class CooldownManager {
      */
     public void clearCooldowns() {
         cooldowns.clear();
+    }
+    
+    /**
+     * Устанавливает все задержки из сохраненного файла
+     * @param savedCooldowns Карта сохраненных задержек
+     */
+    public void setCooldowns(Map<UUID, Long> savedCooldowns) {
+        cooldowns.clear();
+        
+        long currentTime = System.currentTimeMillis();
+        long cooldownInMillis = cooldownTime * 1000L;
+        
+        // Загружаем только актуальные задержки
+        for (Map.Entry<UUID, Long> entry : savedCooldowns.entrySet()) {
+            if ((currentTime - entry.getValue()) < cooldownInMillis) {
+                cooldowns.put(entry.getKey(), entry.getValue());
+            }
+        }
+    }
+    
+    /**
+     * Получает карту всех текущих задержек для сохранения
+     * @return Копия карты задержек
+     */
+    public Map<UUID, Long> getAllCooldowns() {
+        return new HashMap<>(cooldowns);
+    }
+    
+    /**
+     * Очищает просроченные задержки
+     */
+    public void cleanupExpiredCooldowns() {
+        long currentTime = System.currentTimeMillis();
+        long cooldownInMillis = cooldownTime * 1000L;
+        
+        cooldowns.entrySet().removeIf(entry -> 
+            (currentTime - entry.getValue()) >= cooldownInMillis);
     }
 } 

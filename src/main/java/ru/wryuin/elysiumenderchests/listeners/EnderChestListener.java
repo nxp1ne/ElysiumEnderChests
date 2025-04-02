@@ -57,6 +57,28 @@ public class EnderChestListener implements Listener {
 
         // Открываем эндер-сундук
         player.openInventory(player.getEnderChest());
+        
+        // Отправляем сообщение об открытии
+        player.sendMessage(ColorUtils.colorize(plugin.getPluginConfig().getOpenChestMessage()));
+        
+        // Воспроизводим звук, если включено
+        if (plugin.getPluginConfig().isSoundEnabled()) {
+            player.playSound(player.getLocation(), 
+                plugin.getPluginConfig().getOpenSound(), 
+                plugin.getPluginConfig().getSoundVolume(), 
+                plugin.getPluginConfig().getSoundPitch());
+        }
+        
+        // Показываем заголовок, если включено
+        if (plugin.getPluginConfig().shouldShowTitle()) {
+            player.sendTitle(
+                plugin.getPluginConfig().getTitleText(),
+                plugin.getPluginConfig().getTitleSubtitle(player.getName()),
+                plugin.getPluginConfig().getTitleFadeIn(),
+                plugin.getPluginConfig().getTitleStay(),
+                plugin.getPluginConfig().getTitleFadeOut()
+            );
+        }
 
         // Устанавливаем задержку
         if (plugin.getPluginConfig().isDelayEnabled()) {

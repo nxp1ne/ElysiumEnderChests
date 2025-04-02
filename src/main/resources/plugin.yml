@@ -13,3 +13,9 @@ permissions:
   elysiumec.use:
     description: Позволяет использовать эндер-сундук
     default: true
+  elysiumec.enderchest.see.own:
+    description: Позволяет открыть свой эндер-сундук через команду
+    default: true
+  elysiumec.enderchest.see.*:
+    description: Позволяет открыть эндер-сундук любого игрока
+    default: op

@@ -16,6 +16,9 @@ public class EnderChestItem {
     private final ElysiumEnderChests plugin;
     private final Config config;
     private final NamespacedKey enderChestKey;
+    
+    // Кэш для предмета эндер-сундука
+    private ItemStack cachedItem;
 
     public EnderChestItem(ElysiumEnderChests plugin, Config config) {
         this.plugin = plugin;
@@ -23,7 +26,32 @@ public class EnderChestItem {
         this.enderChestKey = new NamespacedKey(plugin, "enderchest");
     }
 
+    /**
+     * Создает или возвращает из кэша предмет эндер-сундук
+     * @return Предмет эндер-сундук
+     */
     public ItemStack create() {
+        // Если предмет уже есть в кэше и кэширование включено, возвращаем копию предмета
+        if (cachedItem != null && config.shouldCacheItems()) {
+            return cachedItem.clone();
+        }
+        
+        // Иначе создаем новый предмет
+        ItemStack item = createNewItem();
+        
+        // Если включено кэширование, сохраняем предмет в кэш
+        if (config.shouldCacheItems()) {
+            cachedItem = item.clone();
+        }
+        
+        return item;
+    }
+    
+    /**
+     * Создает новый предмет эндер-сундук
+     * @return Созданный предмет
+     */
+    private ItemStack createNewItem() {
         ItemStack item = new ItemStack(Material.ENDER_CHEST);
         ItemMeta meta = item.getItemMeta();
         
@@ -56,6 +84,18 @@ public class EnderChestItem {
         return item;
     }
 
+    /**
+     * Очищает кэш предмета при перезагрузке конфигурации
+     */
+    public void clearCache() {
+        cachedItem = null;
+    }
+
+    /**
+     * Проверяет, является ли предмет эндер-сундуком
+     * @param item Проверяемый предмет
+     * @return true если предмет является эндер-сундуком
+     */
     public boolean isEnderChestItem(ItemStack item) {
         if (item == null || !item.hasItemMeta()) {
             return false;
