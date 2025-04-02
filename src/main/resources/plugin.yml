@@ -1,0 +1,15 @@
+name: ElysiumEnderChests
+version: '${project.version}'
+main: ru.wryuin.elysiumenderchests.ElysiumEnderChests
+api-version: '1.16'
+commands:
+  enderchest:
+    aliases: [ec]
+    description: Основная команда плагина ElysiumEnderChests
+permissions:
+  elysiumec.admin:
+    description: Позволяет использовать все команды администратора
+    default: op
+  elysiumec.use:
+    description: Позволяет использовать эндер-сундук
+    default: true
