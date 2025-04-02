@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="ElysiumEnderChests">
+    <output-path>$PROJECT_DIR$/out/artifacts/ElysiumEnderChests</output-path>
+    <root id="archive" name="ElysiumEnderChests.jar">
+      <element id="module-output" name="ElysiumEnderChests" />
+      <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/config.yml" />
+      <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/plugin.yml" />
+    </root>
+  </artifact>
+</component>
