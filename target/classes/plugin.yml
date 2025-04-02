@@ -1,7 +1,10 @@
 name: ElysiumEnderChests
-version: '1.1'
+version: '1.2'
 main: ru.wryuin.elysiumenderchests.ElysiumEnderChests
-api-version: '1.16'
+api-version: '1.13'
+authors: [wryuin]
+description: 'Плагин, добавляющий переносные эндер-сундуки для игроков'
+website: 'https://github.com/nxp1ne/ElysiumEnderChests'
 commands:
   enderchest:
     aliases: [ec]
